@@ -190,7 +190,7 @@ export default function DonationCounter() {
   // Calculate totals
   const totalDonations = donations.reduce((sum, donation) => sum + donation.amount, 0);
   const totalDonors = donations.length;
-  const monthlyGoal = 50000000; // Rp 50,000,000
+  const monthlyGoal = 500000; // Rp 50,000,000
 
   return (
     <div className={`min-h-screen bg-[#222831] font-sans relative ${isFullscreen ? 'pt-24' : 'pt-48'}`}>
