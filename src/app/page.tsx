@@ -89,6 +89,7 @@ const AnimatedCounter = ({ value, label, showPlus = false, isCurrency = false }:
 
 export default function DonationCounter() {
   const [donations, setDonations] = useState<Donation[]>([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Load donations from localStorage on component mount
   useEffect(() => {
@@ -148,19 +149,100 @@ export default function DonationCounter() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
+  // Fullscreen functionality
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+      }).catch((err) => {
+        console.error('Error attempting to enable fullscreen:', err);
+      });
+    } else {
+      document.exitFullscreen().then(() => {
+        setIsFullscreen(false);
+      }).catch((err) => {
+        console.error('Error attempting to exit fullscreen:', err);
+      });
+    }
+  };
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('keydown', handleEscapeKey);
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, []);
+
   // Calculate totals
   const totalDonations = donations.reduce((sum, donation) => sum + donation.amount, 0);
   const totalDonors = donations.length;
   const monthlyGoal = 50000000; // Rp 50,000,000
 
   return (
-    <div className="min-h-screen bg-[#222831] pt-48 font-sans">
+    <div className={`min-h-screen bg-[#222831] font-sans relative ${isFullscreen ? 'pt-24' : 'pt-48'}`}>
+      {/* Fullscreen Button */}
+      <button
+        onClick={toggleFullscreen}
+        className="fixed top-6 right-6 z-50 bg-[#D20062] hover:bg-[#B8004E] text-[#FFD0EC] p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-[#D20062]/30"
+        title={isFullscreen ? "Exit Fullscreen (ESC)" : "Enter Fullscreen"}
+      >
+        {isFullscreen ? (
+          // Exit fullscreen icon
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+          </svg>
+        ) : (
+          // Enter fullscreen icon
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+          </svg>
+        )}
+      </button>
+
+      {/* Add Donation Button - Hide in fullscreen for cleaner view */}
+      {!isFullscreen && (
+        <div className="fixed top-6 left-6 z-50">
+          <a
+            href="/add-donation"
+            className="bg-[#D20062] hover:bg-[#B8004E] text-[#FFD0EC] px-6 py-3 rounded-full font-bold shadow-lg transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-[#D20062]/30 flex items-center gap-2"
+          >
+            <span className="text-xl">💰</span>
+            Add Donation
+          </a>
+        </div>
+      )}
+
       {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mx-auto max-w-[1000px] px-4">
+      <div className={`grid grid-cols-1 md:grid-cols-1 gap-6 mx-auto px-4 ${
+        isFullscreen ? 'max-w-[1200px] gap-8' : 'max-w-[1000px]'
+      }`}>
         <AnimatedCounter value={totalDonations} label="Total Donations" isCurrency={true} />
         <AnimatedCounter value={totalDonors} label="Total Donors" showPlus />
         <AnimatedCounter value={monthlyGoal} label="Monthly Goal" isCurrency={true} />
       </div>
+
+      {/* Fullscreen Helper Text */}
+      {isFullscreen && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+          <div className="bg-[#D20062]/90 text-[#FFD0EC] px-4 py-2 rounded-full text-sm backdrop-blur-sm">
+            Press ESC or click the button to exit fullscreen
+          </div>
+        </div>
+      )}
     </div>
   );
 }
