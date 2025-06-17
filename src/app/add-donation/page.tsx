@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 // Interface for donation data
 interface Donation {
@@ -14,7 +13,6 @@ interface Donation {
 }
 
 export default function AddDonation() {
-  const router = useRouter();
   const [donations, setDonations] = useState<Donation[]>([]);
   const [newDonation, setNewDonation] = useState({
     amount: '',
