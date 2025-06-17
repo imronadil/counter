@@ -1,103 +1,166 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect, useRef } from 'react';
+
+// Interface for donation data
+interface Donation {
+  id: string;
+  amount: number;
+  donor: string; 
+  message?: string;
+  timestamp: Date;
+}
+
+// Counter component with animation
+const AnimatedCounter = ({ value, label, showPlus = false, isCurrency = false }: { value: number; label: string; showPlus?: boolean; isCurrency?: boolean }) => {
+  const [displayValue, setDisplayValue] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const elementRef = useRef<HTMLDivElement>(null);
+
+  // Format number as Indonesian Rupiah
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  // Format number with thousand separators  
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('id-ID').format(num);
+  };
+
+  useEffect(() => {
+    const animateCounter = () => {
+      const duration = 2000;
+      const steps = 60;
+      const increment = value / steps;
+      let current = 0;
+      
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= value) {
+          setDisplayValue(value);
+          clearInterval(timer);
+        } else {
+          setDisplayValue(Math.floor(current));
+        }
+      }, duration / steps);
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasAnimated) {
+            animateCounter();
+            setHasAnimated(true);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    if (elementRef.current) {
+      observer.observe(elementRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasAnimated, value]);
+
+  // Reset animation when value changes
+  useEffect(() => {
+    setHasAnimated(false);
+    setDisplayValue(0);
+  }, [value]);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="bg-[#D20062] p-6 text-center text-[#FFD0EC] rounded-[25px]" ref={elementRef}>
+      <div className="text-5xl font-bold inline-block relative">
+        {isCurrency ? formatCurrency(Math.floor(displayValue)) : formatNumber(Math.floor(displayValue))}
+        {showPlus && displayValue > 0 && (
+          <span className="absolute top-0 -right-4 text-xl">+</span>
+        )}
+      </div>
+      <div className="text-xl mt-2">{label}</div>
+    </div>
+  );
+};
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+export default function DonationCounter() {
+  const [donations, setDonations] = useState<Donation[]>([]);
+
+  // Load donations from localStorage on component mount
+  useEffect(() => {
+    reloadDonations();
+  }, []);
+
+  // Function to reload donations from localStorage
+  const reloadDonations = () => {
+    const savedDonations = localStorage.getItem('donations');
+    if (savedDonations) {
+      try {
+        const parsed = JSON.parse(savedDonations);
+        setDonations(parsed.map((d: Donation) => ({
+          ...d,
+          timestamp: new Date(d.timestamp)
+        })));
+      } catch (error) {
+        console.error('Error loading donations:', error);
+      }
+    } else {
+      // If no donations in localStorage, set to empty array
+      setDonations([]);
+    }
+  };
+
+  // Listen for localStorage changes (live updates from other tabs)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'donations') {
+        reloadDonations();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Listen for custom events (live updates from same tab)
+  useEffect(() => {
+    const handleDonationsUpdate = () => {
+      reloadDonations();
+    };
+
+    window.addEventListener('donationsUpdated', handleDonationsUpdate);
+    return () => window.removeEventListener('donationsUpdated', handleDonationsUpdate);
+  }, []);
+
+  // Refresh donations when page becomes visible (fallback for edge cases)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        reloadDonations();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  // Calculate totals
+  const totalDonations = donations.reduce((sum, donation) => sum + donation.amount, 0);
+  const totalDonors = donations.length;
+  const monthlyGoal = 50000000; // Rp 50,000,000
+
+  return (
+    <div className="min-h-screen bg-[#222831] pt-48 font-sans">
+      {/* Stats Section */}
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mx-auto max-w-[1000px] px-4">
+        <AnimatedCounter value={totalDonations} label="Total Donations" isCurrency={true} />
+        <AnimatedCounter value={totalDonors} label="Total Donors" showPlus />
+        <AnimatedCounter value={monthlyGoal} label="Monthly Goal" isCurrency={true} />
+      </div>
     </div>
   );
 }
